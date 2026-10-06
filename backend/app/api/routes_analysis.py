@@ -33,7 +33,8 @@ def run_analysis_pipeline(req: RunAnalysisRequest):
     if req.records:
         result = orchestrator.run_analysis(req.records, dataset_id=req.dataset_id)
     elif req.scenario_name:
-        scenario_file = SCENARIOS_DIR / req.scenario_name
+        fname = req.scenario_name if req.scenario_name.endswith(".jsonl") else f"{req.scenario_name}.jsonl"
+        scenario_file = SCENARIOS_DIR / fname
         if not scenario_file.is_file():
             raise HTTPException(status_code=404, detail=f"Scenario file '{req.scenario_name}' not found.")
         result = orchestrator.run_analysis(scenario_file, dataset_id=req.dataset_id or req.scenario_name)
