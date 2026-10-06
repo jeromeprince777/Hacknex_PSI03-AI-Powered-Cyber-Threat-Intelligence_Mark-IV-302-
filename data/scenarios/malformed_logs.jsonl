@@ -1,0 +1,8 @@
+{"event_id": "mal-001", "timestamp": "2026-10-06T10:00:00Z", "event_type": "login_success", "source": "windows", "user_id": "user-valid"}
+{"timestamp": "2026-10-06T10:01:00Z", "event_type": "login_success", "source": "windows", "user_id": "user-missing-id"}
+{"event_id": "mal-002", "event_type": "file_access", "source": "windows", "user_id": "user-missing-time"}
+{"event_id": "mal-003", "timestamp": "invalid-timestamp-value", "event_type": "file_access", "source": "windows", "user_id": "user-bad-time"}
+{"event_id": "mal-004", "timestamp": "2026-10-06T10:04:00Z", "source": "windows", "user_id": "user-missing-type"}
+{"event_id": "evt-dup-01", "timestamp": "2026-10-06T10:05:00Z", "event_type": "login_success", "source": "vpn", "user_id": "user-dup"}
+{"event_id": "evt-dup-01", "timestamp": "2026-10-06T10:06:00Z", "event_type": "file_access", "source": "windows", "user_id": "user-dup"}
+{this is not valid json at all}

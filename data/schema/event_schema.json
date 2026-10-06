@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ThreatWeaveEvent",
+  "description": "Canonical Event Schema for ThreatWeave security log normalization and correlation",
+  "type": "object",
+  "required": [
+    "event_id",
+    "timestamp",
+    "event_type",
+    "source"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "description": "Unique identifier for the event (e.g. evt-001)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 formatted UTC timestamp"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Normalized category: login_success, login_failure, file_access, usb_connected, usb_copy, outbound_connection, process_start, etc."
+    },
+    "source": {
+      "type": "string",
+      "description": "Log source origin: windows, linux, vpn, firewall, edr, file_server, etc."
+    },
+    "action": {
+      "type": ["string", "null"],
+      "description": "Observed action: read, write, execute, connect, mount, authenticate"
+    },
+    "user_id": {
+      "type": ["string", "null"],
+      "description": "Actor user identifier (e.g. user-42, jdoe)"
+    },
+    "device_id": {
+      "type": ["string", "null"],
+      "description": "Endpoint hostname or device ID (e.g. device-17, WKST-9102)"
+    },
+    "src_ip": {
+      "type": ["string", "null"],
+      "description": "Source IP address"
+    },
+    "dst_ip": {
+      "type": ["string", "null"],
+      "description": "Destination IP address"
+    },
+    "application": {
+      "type": ["string", "null"],
+      "description": "Process name or application (e.g. FileExplorer, powershell.exe, curl.exe)"
+    },
+    "resource": {
+      "type": ["string", "null"],
+      "description": "Target file path, share name, or URI"
+    },
+    "session_id": {
+      "type": ["string", "null"],
+      "description": "Logon or connection session ID"
+    },
+    "attributes": {
+      "type": "object",
+      "description": "Arbitrary contextual key-value attributes (e.g. bytes, login_location, device_trust, removable_media_id)",
+      "default": {}
+    },
+    "raw": {
+      "type": "object",
+      "description": "Original raw event payload prior to normalization",
+      "default": {}
+    }
+  },
+  "additionalProperties": false
+}
