@@ -1,0 +1,55 @@
+rules:
+  - id: AUTH_NEW_LOCATION
+    event_type: login_success
+    stage: initial_access
+    signal_type: new_login_location
+    base_score: 0.55
+    description: "Successful authentication from a foreign country or previously unseen IP/location"
+    conditions:
+      external_or_novel_ip: true
+
+  - id: UNUSUAL_RESOURCE_ACCESS
+    event_type: file_access
+    stage: resource_collection
+    signal_type: unusual_resource_access
+    base_score: 0.70
+    description: "Read or access to confidential, financial, or sensitive enterprise resources"
+    conditions:
+      action: "read"
+      sensitive_keywords: ["confidential", "restricted", "payroll", "titan", "m&a", "secret"]
+
+  - id: USB_CONNECTED
+    event_type: usb_connected
+    stage: removable_media_transfer
+    signal_type: usb_connected
+    base_score: 0.65
+    description: "Removable media or USB storage device attached to corporate endpoint"
+    conditions:
+      action: "mount"
+
+  - id: USB_COPY
+    event_type: usb_copy
+    stage: removable_media_transfer
+    signal_type: usb_copy
+    base_score: 0.85
+    description: "File write or data transfer directed to removable USB storage media"
+    conditions:
+      action: "write"
+
+  - id: LARGE_OUTBOUND_TRANSFER
+    event_type: outbound_connection
+    stage: exfiltration
+    signal_type: large_outbound_transfer
+    base_score: 0.75
+    description: "Significant outbound network traffic following local staging or collection"
+    conditions:
+      min_bytes: 10000000
+
+  - id: SUSPICIOUS_PROCESS
+    event_type: process_start
+    stage: execution
+    signal_type: suspicious_process
+    base_score: 0.60
+    description: "Execution of script engine or utility with execution bypass or transfer flags"
+    conditions:
+      suspicious_tools: ["curl.exe", "powershell.exe", "certutil.exe", "scp.exe"]
