@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%">
+  <defs>
+    <linearGradient id="topoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080c14" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="540" fill="url(#topoBg)" rx="16" />
+
+  <text x="50" y="45" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#06b6d4" letter-spacing="2">NETWORKX MULTI-RELATIONAL TOPOLOGY</text>
+  <text x="50" y="80" font-family="Segoe UI, sans-serif" font-size="22" font-weight="bold" fill="#f8fafc">Incident inc-001 Correlated Entity Subgraph</text>
+
+  <!-- EDGES -->
+  <line x1="200" y1="200" x2="350" y2="280" stroke="#334155" stroke-width="2.5" />
+  <line x1="350" y1="280" x2="520" y2="280" stroke="#06b6d4" stroke-width="3" />
+  <line x1="520" y1="280" x2="680" y2="180" stroke="#334155" stroke-width="2.5" />
+  <line x1="520" y1="280" x2="680" y2="380" stroke="#334155" stroke-width="2.5" />
+  <line x1="520" y1="280" x2="780" y2="280" stroke="#f43f5e" stroke-width="2.5" stroke-dasharray="6,4" />
+
+  <!-- EDGE LABELS -->
+  <rect x="235" y="225" width="80" height="22" rx="4" fill="#0f172a" stroke="#1e293b"/>
+  <text x="245" y="240" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#a855f7">FROM_IP</text>
+
+  <rect x="400" y="268" width="90" height="22" rx="4" fill="#0f172a" stroke="#1e293b"/>
+  <text x="408" y="283" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#38bdf8">OCCURRED_ON</text>
+
+  <rect x="560" y="210" width="120" height="22" rx="4" fill="#0f172a" stroke="#1e293b"/>
+  <text x="566" y="225" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#10b981">ACCESSED_RESOURCE</text>
+
+  <rect x="580" y="340" width="90" height="22" rx="4" fill="#0f172a" stroke="#1e293b"/>
+  <text x="588" y="355" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#f59e0b">MOUNTED_USB</text>
+
+  <rect x="610" y="268" width="120" height="22" rx="4" fill="#0f172a" stroke="#1e293b"/>
+  <text x="618" y="283" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#f43f5e">CONNECTED_TO_IP</text>
+
+  <!-- NODES -->
+  <!-- 1. Ingress IP -->
+  <g transform="translate(200, 200)">
+    <circle r="40" fill="#2e1065" stroke="#a855f7" stroke-width="2.5" />
+    <text x="-28" y="-5" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#e9d5ff">Ingress IP</text>
+    <text x="-32" y="15" font-family="Segoe UI, sans-serif" font-size="9" fill="#c084fc">203.0.113.10</text>
+  </g>
+
+  <!-- 2. User Actor -->
+  <g transform="translate(350, 280)">
+    <circle r="46" fill="#1e1b4b" stroke="#6366f1" stroke-width="3" />
+    <text x="-25" y="-5" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#c7d2fe">Actor</text>
+    <text x="-28" y="16" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">user-42</text>
+  </g>
+
+  <!-- 3. Workstation Device -->
+  <g transform="translate(520, 280)">
+    <circle r="46" fill="#083344" stroke="#06b6d4" stroke-width="3" />
+    <text x="-28" y="-5" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#a5f3fc">Device</text>
+    <text x="-32" y="16" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">device-17</text>
+  </g>
+
+  <!-- 4. Sensitive Resource -->
+  <g transform="translate(680, 180)">
+    <circle r="40" fill="#064e3b" stroke="#10b981" stroke-width="2.5" />
+    <text x="-28" y="-5" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#a7f3d0">Resource</text>
+    <text x="-30" y="15" font-family="Segoe UI, sans-serif" font-size="9" fill="#6ee7b7">payroll.xlsx</text>
+  </g>
+
+  <!-- 5. Removable Storage -->
+  <g transform="translate(680, 380)">
+    <circle r="40" fill="#451a03" stroke="#f59e0b" stroke-width="2.5" />
+    <text x="-32" y="-5" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#fde68a">USB Storage</text>
+    <text x="-28" y="15" font-family="Segoe UI, sans-serif" font-size="9" fill="#fcd34d">Volume:E:\</text>
+  </g>
+
+  <!-- 6. Egress IP -->
+  <g transform="translate(780, 280)">
+    <circle r="40" fill="#450a0a" stroke="#f43f5e" stroke-width="2.5" />
+    <text x="-26" y="-5" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#fecaca">Egress IP</text>
+    <text x="-34" y="15" font-family="Segoe UI, sans-serif" font-size="9" fill="#f87171">198.51.100.88</text>
+  </g>
+</svg>

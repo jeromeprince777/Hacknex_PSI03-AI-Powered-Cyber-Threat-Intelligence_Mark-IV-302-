@@ -54,6 +54,7 @@ def explain_incident(req: CopilotExplainRequest):
     return {
         "incident_id": req.incident_id,
         "question": req.question,
+        "provider": result.get("provider", "deterministic"),
         "verified": result["verified"],
         "verification_status": result["verification_status"],
         "rejection_reason": result["rejection_reason"],

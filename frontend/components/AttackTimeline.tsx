@@ -1,19 +1,23 @@
 "use client";
 
 import React from "react";
-import { Clock, ShieldAlert, FileText, HardDrive, Wifi, ArrowRight } from "lucide-react";
+import { Clock, ShieldAlert, FileText, HardDrive, Wifi, ArrowRight, ShieldCheck, ChevronRight } from "lucide-react";
 import { TimelineItem } from "../lib/types";
 
 interface AttackTimelineProps {
   timeline: TimelineItem[];
   selectedEventId: string | null;
+  selectedStageId: string | null;
   onSelectEvent: (eventId: string) => void;
+  onSelectStage?: (stageId: string | null) => void;
 }
 
 export const AttackTimeline: React.FC<AttackTimelineProps> = ({
   timeline,
   selectedEventId,
+  selectedStageId,
   onSelectEvent,
+  onSelectStage,
 }) => {
   const getSourceIcon = (source: string) => {
     switch (source.toLowerCase()) {
@@ -46,87 +50,108 @@ export const AttackTimeline: React.FC<AttackTimelineProps> = ({
   };
 
   return (
-    <div className="rounded border border-[#1e2438] bg-[#0d101a] p-4">
-      <div className="flex items-center justify-between border-b border-[#161a29] pb-3">
+    <section aria-label="Reconstructed Attack Timeline" className="rounded-sm border border-[#171d2b] bg-[#0c0f17] p-4 text-slate-200">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-[#151a26] pb-3">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-cyan-400" />
-          <h3 className="font-mono text-sm font-bold text-slate-100">
-            ATTACK RECONSTRUCTION TIMELINE
+          <h3 className="font-mono-technical text-sm font-bold tracking-wide text-slate-100">
+            CHRONOLOGICAL ATTACK RECONSTRUCTION TIMELINE
           </h3>
         </div>
-        <span className="font-mono text-xs text-slate-400">
-          Chronologically Ordered Telemetry ({timeline.length} events)
-        </span>
+        <div className="flex items-center gap-2 font-mono-technical text-[11px] text-slate-400">
+          <span>{timeline.length} VERIFIED TELEMETRY EVENTS</span>
+          {selectedStageId && (
+            <>
+              <span className="text-slate-600">•</span>
+              <span className="text-cyan-400 font-bold">FILTER: {selectedStageId.toUpperCase()}</span>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="mt-4 relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#1e2438]">
-        {timeline.map((item, idx) => {
+      {/* Forensic Timeline Stream */}
+      <div className="mt-4 relative pl-5 space-y-2.5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-[#181f2f]">
+        {timeline.map((item) => {
           const isSelected = selectedEventId === item.event_id;
+          const isStageMatched = selectedStageId ? item.stage_id === selectedStageId : true;
+          const isStageFocused = selectedStageId && item.stage_id === selectedStageId;
           const timeFormatted = item.timestamp.replace("T", " ").replace("Z", " UTC");
 
           return (
             <div
               key={item.event_id}
               onClick={() => onSelectEvent(item.event_id)}
-              className={`relative cursor-pointer rounded border p-3 transition ${
+              className={`relative cursor-pointer rounded-sm border p-3 transition-all select-none ${
                 isSelected
-                  ? "border-cyan-500 bg-[#14192b] shadow-md shadow-cyan-950/20"
-                  : "border-[#1e2438] bg-[#101320] hover:border-[#2b334d] hover:bg-[#131726]"
-              }`}
+                  ? "border-cyan-400 bg-[#121929] shadow-md shadow-cyan-950/40 ring-1 ring-cyan-400/40"
+                  : isStageFocused
+                  ? "border-cyan-500/40 bg-[#101624]"
+                  : "border-[#171d2b] bg-[#10141f] hover:border-[#2b354d] hover:bg-[#131826]"
+              } ${!isStageMatched ? "opacity-45 hover:opacity-100" : "opacity-100"}`}
             >
-              {/* Timeline marker node */}
+              {/* Timeline Node Bullet */}
               <div
-                className={`absolute -left-[27px] top-3.5 h-3 w-3 rounded-full border-2 ${
+                className={`absolute -left-[25px] top-3.5 h-2.5 w-2.5 rounded-full border-2 transition-colors ${
                   isSelected
-                    ? "border-cyan-400 bg-cyan-950"
-                    : "border-[#1e2438] bg-[#0d101a]"
+                    ? "border-cyan-400 bg-cyan-400"
+                    : isStageFocused
+                    ? "border-cyan-400 bg-[#0c0f17]"
+                    : "border-[#2b354d] bg-[#0c0f17]"
                 }`}
               />
 
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                {/* Event Metadata Strip */}
+              {/* Event Metadata Ribbon */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-cyan-300 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-500/30">
+                  <span className="font-mono-technical text-xs font-bold text-cyan-300 bg-cyan-950/40 px-2 py-0.5 rounded-sm border border-cyan-500/30">
                     {item.event_id}
                   </span>
 
                   <span
-                    className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] uppercase font-semibold ${getStageBadgeStyle(
+                    onClick={(e) => {
+                      if (onSelectStage) {
+                        e.stopPropagation();
+                        onSelectStage(selectedStageId === item.stage_id ? null : item.stage_id);
+                      }
+                    }}
+                    className={`inline-flex items-center rounded-sm border px-2 py-0.5 font-mono-technical text-[10px] font-bold uppercase cursor-pointer hover:brightness-125 transition ${getStageBadgeStyle(
                       item.stage_id
                     )}`}
+                    title="Filter by stage"
                   >
                     {item.stage_id}
                   </span>
 
-                  <span className="inline-flex items-center gap-1 rounded bg-[#161b2c] px-2 py-0.5 font-mono text-[11px] text-slate-300 border border-[#1e2438]">
+                  <span className="inline-flex items-center gap-1 rounded-sm bg-[#141926] px-2 py-0.5 font-mono-technical text-[10px] text-slate-300 border border-[#1e2638]">
                     {getSourceIcon(item.source)}
-                    {item.source}
+                    <span className="uppercase">{item.source}</span>
                   </span>
 
-                  <span className="font-mono text-[11px] text-slate-400">
+                  <span className="font-mono-technical text-[11px] text-slate-400">
                     {timeFormatted}
                   </span>
                 </div>
 
-                {/* Inspect Action Hint */}
-                <div className="flex items-center gap-1 text-[11px] font-mono text-slate-400 group-hover:text-cyan-300">
-                  <span>Inspect</span>
-                  <ArrowRight className="h-3 w-3" />
+                <div className="flex items-center gap-1 font-mono-technical text-[11px] text-slate-400 group-hover:text-cyan-300">
+                  <span>INSPECT TELEMETRY</span>
+                  <ChevronRight className="h-3 w-3" />
                 </div>
               </div>
 
-              {/* Factual Non-Hallucinated Statement */}
-              <p className="mt-2 text-xs text-slate-200 leading-relaxed font-sans">
+              {/* Objective Telemetry Fact Statement */}
+              <p className="mt-2 text-xs font-mono-technical text-slate-200 leading-relaxed">
                 {item.fact}
               </p>
 
-              {/* Entity tags */}
+              {/* Correlated Entities Linked to this Event */}
               {item.linked_entities && item.linked_entities.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
+                <div className="mt-2 flex flex-wrap gap-1.5 pt-1.5 border-t border-[#161c2b]">
+                  <span className="font-mono-technical text-[10px] text-slate-400">Entities:</span>
                   {item.linked_entities.map((ent) => (
                     <span
                       key={ent}
-                      className="rounded bg-[#181d2f] px-1.5 py-0.2 text-[10px] font-mono text-slate-400 border border-[#21273d]"
+                      className="rounded-sm bg-[#141926] px-1.5 py-0.2 font-mono-technical text-[10px] text-slate-300 border border-[#1c2336]"
                     >
                       {ent}
                     </span>
@@ -137,6 +162,6 @@ export const AttackTimeline: React.FC<AttackTimelineProps> = ({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };

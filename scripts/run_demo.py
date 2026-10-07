@@ -141,7 +141,7 @@ def main():
 +--------------------------+--------------+------------+------------------------+
 | Scenario                 | Events Input | Incidents  | Outcome / Verdict      |
 +--------------------------+--------------+------------+------------------------+
-| attack_insider_usb.jsonl | 15 events    | 1 (Risk 89)| Reconstructed 3 Stages |
+| attack_insider_usb.jsonl | 15 events    | 1 (Risk 89)| Reconstructed 4 Stages |
 | benign_admin.jsonl       | 10 events    | 0          | FP Suppressed 100%     |
 | attack_partial.jsonl     | 7 events     | 1 (Risk 76)| Gracefully Degraded    |
 | malformed_logs.jsonl     | 8 records    | 0          | Quarantined (0 Crash)  |

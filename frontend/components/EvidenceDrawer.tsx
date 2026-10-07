@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, FileCode, CheckCircle, Database, ShieldAlert, Copy, Check } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Check, Copy, FileJson2, X, Terminal, ShieldAlert } from "lucide-react";
 import { EvidenceItem } from "../lib/types";
 
 interface EvidenceDrawerProps {
@@ -11,163 +11,173 @@ interface EvidenceDrawerProps {
 
 export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({ event, onClose }) => {
   const [activeTab, setActiveTab] = useState<"normalized" | "raw">("normalized");
-  const [copied, setCopied] = useState<boolean>(false);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
+
+  useEffect(() => {
+    if (!event) return;
+    const onKeyDown = (keyboardEvent: KeyboardEvent) => {
+      if (keyboardEvent.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [event, onClose]);
 
   if (!event) return null;
 
-  const copyJson = () => {
-    const payload = activeTab === "normalized" ? event.normalized : event.raw;
-    navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  const payload = activeTab === "normalized" ? event.normalized : event.raw;
+
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      setCopied(true);
+      setCopyError(false);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      setCopied(false);
+      setCopyError(true);
+    }
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[540px] border-l border-[#1e2438] bg-[#0c0f1a] shadow-2xl flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#1e2438] bg-[#090c14] p-4">
-        <div className="flex items-center gap-2">
-          <Database className="h-4 w-4 text-cyan-400" />
-          <h3 className="font-mono text-sm font-bold text-slate-100">
-            TELEMETRY EVIDENCE INSPECTOR
-          </h3>
-          <span className="rounded border border-cyan-500/30 bg-cyan-950/40 px-2 py-0.5 font-mono text-xs font-bold text-cyan-300">
-            {event.event_id}
-          </span>
-        </div>
-        <button
-          onClick={onClose}
-          className="rounded p-1 text-slate-400 hover:text-slate-100 hover:bg-[#1a2034]"
-          title="Close inspector"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Body: Metadata & Reason Codes */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Basic Stats Grid */}
-        <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-          <div className="rounded border border-[#1e2438] bg-[#121625] p-2">
-            <span className="text-slate-400 text-[10px] block">Timestamp (UTC)</span>
-            <span className="text-slate-200">{event.timestamp}</span>
-          </div>
-          <div className="rounded border border-[#1e2438] bg-[#121625] p-2">
-            <span className="text-slate-400 text-[10px] block">Source Origin</span>
-            <span className="text-cyan-300 uppercase">{event.source}</span>
-          </div>
-        </div>
-
-        {/* Detectors that fired */}
-        {event.detectors && event.detectors.length > 0 && (
-          <div className="rounded border border-rose-500/30 bg-rose-950/20 p-3 space-y-2">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-rose-300">
-              <ShieldAlert className="h-3.5 w-3.5" />
-              <span>DETECTORS TRIGGERED ON THIS EVENT</span>
+    <div className="fixed inset-0 z-50 flex justify-end select-none">
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label="Close evidence detail"
+      />
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="evidence-drawer-heading"
+        className="relative flex h-full w-full max-w-[min(44rem,100vw)] flex-col border-l border-slate-800 bg-[#0b0f14] shadow-2xl text-slate-200"
+      >
+        <header className="flex items-center justify-between gap-4 border-b border-slate-800 bg-[#111822] px-4 py-3 sm:px-5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-cyan-400" />
+              <p className="text-[10px] font-mono-technical font-bold uppercase tracking-wider text-slate-400">
+                FORENSIC EVENT INSPECTOR
+              </p>
             </div>
-            {event.detectors.map((d, i) => (
-              <div
-                key={i}
-                className="rounded border border-rose-500/20 bg-[#161220] p-2 text-xs font-mono flex items-center justify-between"
-              >
-                <div>
-                  <span className="font-bold text-rose-300 block">{d.reason_code}</span>
-                  <span className="text-[10px] text-slate-400">Signal: {d.signal_type}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-amber-300 block uppercase">
-                    Stage: {d.stage}
-                  </span>
-                  <span className="text-[10px] text-rose-400 font-bold">
-                    Score: {d.score}
-                  </span>
-                </div>
+            <h2 id="evidence-drawer-heading" className="mt-0.5 break-all font-mono-technical text-sm font-bold text-cyan-400">
+              {event.event_id}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="tw-inline-action h-7 px-2 text-slate-400 hover:text-slate-100"
+            aria-label="Close evidence detail"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-5 font-mono-technical text-xs">
+          {/* Metadata Grid */}
+          <dl className="grid grid-cols-1 border border-slate-800 bg-[#111822] sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-800">
+            <div className="p-3">
+              <dt className="text-[9px] font-bold uppercase text-slate-400">EXACT UTC TIMESTAMP</dt>
+              <dd className="mt-1 break-all text-[11px] text-slate-200">{event.timestamp}</dd>
+            </div>
+            <div className="p-3">
+              <dt className="text-[9px] font-bold uppercase text-slate-400">INGESTION SOURCE</dt>
+              <dd className="mt-1 break-all text-[11px] text-cyan-300 font-bold">{event.source}</dd>
+            </div>
+          </dl>
+
+          {/* Detector Signals */}
+          {event.detectors.length > 0 && (
+            <section aria-labelledby="detector-signals-heading" className="border border-slate-800 bg-[#111822] p-3">
+              <div className="flex items-baseline justify-between gap-2 border-b border-slate-800 pb-2">
+                <h3 id="detector-signals-heading" className="text-xs font-bold text-slate-100">
+                  TRIGGERED DETECTOR SIGNALS
+                </h3>
+                <span className="text-[10px] text-slate-400">{event.detectors.length} detectors</span>
               </div>
-            ))}
-          </div>
-        )}
+              <ul className="mt-2 divide-y divide-slate-800/80">
+                {event.detectors.map((detector, index) => (
+                  <li key={`${detector.reason_code}-${index}`} className="grid gap-1 py-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="min-w-0">
+                      <p className="break-all text-[11px] font-bold text-rose-400">{detector.reason_code}</p>
+                      <p className="mt-0.5 text-[10px] text-slate-400">{detector.signal_type}</p>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-slate-400 sm:flex-col sm:items-end sm:gap-0.5">
+                      <span>Stage: <span className="text-cyan-400">{detector.stage}</span></span>
+                      <span>Score: <span className="text-amber-400 font-bold">{detector.score}</span></span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-        {/* Linked Entities */}
-        {event.linked_entities && event.linked_entities.length > 0 && (
-          <div className="space-y-1">
-            <span className="text-xs text-slate-400 font-medium">Associated Entities:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {event.linked_entities.map((ent) => (
-                <span
-                  key={ent}
-                  className="rounded border border-[#1e2438] bg-[#141828] px-2 py-0.5 font-mono text-[11px] text-slate-300"
+          {/* Linked Entities */}
+          {event.linked_entities.length > 0 && (
+            <section aria-labelledby="linked-entities-heading" className="border border-slate-800 bg-[#111822] p-3">
+              <div className="flex items-baseline justify-between gap-2 mb-2">
+                <h3 id="linked-entities-heading" className="text-xs font-bold text-slate-100">
+                  LINKED ATTRIBUTION ENTITIES
+                </h3>
+                <span className="text-[10px] text-cyan-400">{event.linked_entities.length} items</span>
+              </div>
+              <ul className="flex flex-wrap gap-1.5">
+                {event.linked_entities.map((entity) => (
+                  <li key={entity} className="border border-slate-700 bg-[#0b0f14] px-2 py-0.5 text-[10px] text-slate-300">
+                    {entity}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Raw / Normalized Payload JSON */}
+          <section className="border border-slate-800 bg-[#111822] overflow-hidden" aria-labelledby="event-payload-heading">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 p-2.5">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("normalized")}
+                  className={`px-2 py-1 text-[10px] font-bold border transition-colors ${
+                    activeTab === "normalized"
+                      ? "bg-cyan-400 text-[#0b0f14] border-cyan-400"
+                      : "bg-[#0b0f14] text-slate-400 border-slate-700"
+                  }`}
                 >
-                  {ent}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Payload Inspector (Normalized vs Raw) */}
-        <div className="rounded border border-[#1e2438] bg-[#090b12] overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#1e2438] bg-[#101320] px-3 py-2">
-            <div className="flex items-center gap-1 font-mono text-xs">
+                  NORMALIZED SCHEMA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("raw")}
+                  className={`px-2 py-1 text-[10px] font-bold border transition-colors ${
+                    activeTab === "raw"
+                      ? "bg-cyan-400 text-[#0b0f14] border-cyan-400"
+                      : "bg-[#0b0f14] text-slate-400 border-slate-700"
+                  }`}
+                >
+                  RAW RECORD
+                </button>
+              </div>
               <button
-                onClick={() => setActiveTab("normalized")}
-                className={`rounded px-2.5 py-1 transition ${
-                  activeTab === "normalized"
-                    ? "bg-[#1d2338] text-cyan-300 font-bold"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+                type="button"
+                onClick={() => void copyJson()}
+                className="tw-inline-action h-7 px-2 text-[10px]"
               >
-                Canonical Normalized Event
-              </button>
-              <button
-                onClick={() => setActiveTab("raw")}
-                className={`rounded px-2.5 py-1 transition ${
-                  activeTab === "raw"
-                    ? "bg-[#1d2338] text-cyan-300 font-bold"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                Raw Vendor Record
+                {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                <span>{copied ? "COPIED" : "COPY JSON"}</span>
               </button>
             </div>
-
-            <button
-              onClick={copyJson}
-              className="flex items-center gap-1 rounded bg-[#181e30] border border-[#232a42] px-2 py-0.5 font-mono text-[11px] text-slate-300 hover:bg-[#202840]"
-              title="Copy JSON to clipboard"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-3 w-3 text-emerald-400" />
-                  <span className="text-emerald-400">Copied</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3 w-3" />
-                  <span>Copy</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          <pre className="p-3 font-mono text-[11px] text-cyan-100 overflow-x-auto max-h-[360px] leading-relaxed">
-            {JSON.stringify(
-              activeTab === "normalized" ? event.normalized : event.raw,
-              null,
-              2
-            )}
-          </pre>
+            {copyError && <p role="status" className="px-3 pt-2 text-[10px] text-rose-400">Clipboard access blocked.</p>}
+            <div className="max-h-[45vh] overflow-auto bg-[#080c10] p-3">
+              <pre className="whitespace-pre-wrap break-all text-[10.5px] leading-relaxed text-emerald-300 font-mono">
+                {JSON.stringify(payload, null, 2)}
+              </pre>
+            </div>
+          </section>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-[#1e2438] bg-[#090c14] p-3 text-right">
-        <button
-          onClick={onClose}
-          className="rounded border border-[#1e2438] bg-[#141827] px-4 py-1.5 font-mono text-xs text-slate-300 hover:bg-[#1a2034]"
-        >
-          Close Drawer
-        </button>
-      </div>
+      </aside>
     </div>
   );
 };

@@ -24,11 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full dark`}
-    >
-      <body className="min-h-full flex flex-col bg-[#08090e] text-[#f1f5f9] selection:bg-cyan-500/20 selection:text-cyan-300">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark h-full`}>
+      <body className="min-h-full flex flex-col bg-[#0b0f14] text-slate-100 selection:bg-cyan-500 selection:text-[#0b0f14]">
         {children}
       </body>
     </html>

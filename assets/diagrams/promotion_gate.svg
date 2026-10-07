@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="gateBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#080c14" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <marker id="g-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#06b6d4" />
+    </marker>
+    <marker id="g-arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+    </marker>
+    <marker id="g-arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#f43f5e" />
+    </marker>
+  </defs>
+
+  <rect width="900" height="520" fill="url(#gateBg)" rx="16" />
+
+  <text x="50" y="45" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#06b6d4" letter-spacing="2">RULE 1 ENFORCEMENT ENGINE</text>
+  <text x="50" y="80" font-family="Segoe UI, sans-serif" font-size="22" font-weight="bold" fill="#f8fafc">Multi-Stage Incident Promotion Gate</text>
+
+  <!-- Input Cluster -->
+  <g transform="translate(50, 120)">
+    <rect width="220" height="90" rx="10" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+    <text x="20" y="35" font-family="Segoe UI, sans-serif" font-size="14" font-weight="bold" fill="#38bdf8">Incoming Signal Cluster</text>
+    <text x="20" y="60" font-family="Segoe UI, sans-serif" font-size="12" fill="#94a3b8">Clustered by Primary Actor</text>
+    <text x="20" y="78" font-family="Segoe UI, sans-serif" font-size="12" fill="#94a3b8">(user_id or device_id)</text>
+  </g>
+
+  <path d="M 270 165 L 340 165" fill="none" stroke="#06b6d4" stroke-width="2.5" marker-end="url(#g-arrow)" />
+
+  <!-- Decision 1: Event Count -->
+  <g transform="translate(350, 115)">
+    <polygon points="100,0 200,50 100,100 0,50" fill="#1e1b4b" stroke="#6366f1" stroke-width="2"/>
+    <text x="45" y="48" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#e0e7ff">Events ≥ 3 ?</text>
+    <text x="55" y="66" font-family="Segoe UI, sans-serif" font-size="11" fill="#c7d2fe">(Evidence check)</text>
+  </g>
+
+  <!-- Decision 1 -> FAIL -->
+  <path d="M 450 215 L 450 340" fill="none" stroke="#f43f5e" stroke-width="2.5" marker-end="url(#g-arrow-red)" />
+  <text x="460" y="270" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#f43f5e">NO (&lt;3 events)</text>
+
+  <!-- Decision 1 -> YES -> Decision 2 -->
+  <path d="M 550 165 L 620 165" fill="none" stroke="#10b981" stroke-width="2.5" marker-end="url(#g-arrow-green)" />
+  <text x="565" y="150" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#10b981">YES</text>
+
+  <!-- Decision 2: Stages Count -->
+  <g transform="translate(630, 115)">
+    <polygon points="100,0 200,50 100,100 0,50" fill="#1e1b4b" stroke="#6366f1" stroke-width="2"/>
+    <text x="45" y="48" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#e0e7ff">Stages ≥ 2 ?</text>
+    <text x="45" y="66" font-family="Segoe UI, sans-serif" font-size="11" fill="#c7d2fe">(Multi-stage check)</text>
+  </g>
+
+  <!-- Decision 2 -> FAIL -->
+  <path d="M 730 215 L 730 310 L 580 370" fill="none" stroke="#f43f5e" stroke-width="2.5" marker-end="url(#g-arrow-red)" />
+  <text x="740" y="270" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#f43f5e">NO (1 stage)</text>
+
+  <!-- Decision 2 -> PASS -->
+  <path d="M 830 165 L 870 165 L 870 410 L 680 410" fill="none" stroke="#10b981" stroke-width="2.5" marker-end="url(#g-arrow-green)" />
+  <text x="835" y="150" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#10b981">YES</text>
+
+  <!-- SUPPRESSION LEDGER RESULT -->
+  <g transform="translate(250, 340)">
+    <rect width="320" height="120" rx="10" fill="#1c1917" stroke="#dc2626" stroke-width="2"/>
+    <text x="24" y="32" font-family="Segoe UI, sans-serif" font-size="15" font-weight="bold" fill="#f87171">FALSE-POSITIVE SUPPRESSION</text>
+    <text x="24" y="58" font-family="Segoe UI, sans-serif" font-size="12" fill="#d6d3d1">• Reason: INSUFFICIENT_CHAIN_EVIDENCE</text>
+    <text x="24" y="78" font-family="Segoe UI, sans-serif" font-size="12" fill="#d6d3d1">• Routed to Immutable SQLite Audit Log</text>
+    <text x="24" y="98" font-family="Segoe UI, sans-serif" font-size="12" fill="#d6d3d1">• Quiet SOC Queue: Zero Incidents Created</text>
+  </g>
+
+  <!-- PROMOTED INCIDENT RESULT -->
+  <g transform="translate(600, 340)">
+    <rect width="260" height="120" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+    <text x="20" y="32" font-family="Segoe UI, sans-serif" font-size="15" font-weight="bold" fill="#34d399">INCIDENT PROMOTED</text>
+    <text x="20" y="58" font-family="Segoe UI, sans-serif" font-size="12" fill="#d1fae5">• Compute 4-Factor Risk Score</text>
+    <text x="20" y="78" font-family="Segoe UI, sans-serif" font-size="12" fill="#d1fae5">• Extract 1-Hop Entity Subgraph</text>
+    <text x="20" y="98" font-family="Segoe UI, sans-serif" font-size="12" fill="#d1fae5">• Build Bounded Evidence Pack</text>
+  </g>
+</svg>

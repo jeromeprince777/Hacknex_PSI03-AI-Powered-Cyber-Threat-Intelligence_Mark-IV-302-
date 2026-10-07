@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Play, CheckCircle2, AlertTriangle, Layers, Clock, ShieldCheck, Database, RefreshCw } from "lucide-react";
+import { Play, CheckCircle2, AlertTriangle, Layers, Clock, ShieldCheck, Database, RefreshCw, Terminal, Check } from "lucide-react";
 import { fetchScenarios, runAnalysis } from "../lib/api";
 import { AnalysisRunResult, ScenarioItem } from "../lib/types";
 
@@ -17,20 +17,21 @@ export const DatasetReplay: React.FC<DatasetReplayProps> = ({ onAnalysisComplete
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadScenarios();
+    let active = true;
+    void fetchScenarios()
+      .then((items) => {
+        if (active) setScenarios(items);
+      })
+      .catch((err: unknown) => {
+        if (active) setError(err instanceof Error ? err.message : "Failed to load test scenarios");
+      })
+      .finally(() => {
+        if (active) setLoadingScenarios(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
-
-  const loadScenarios = async () => {
-    try {
-      setLoadingScenarios(true);
-      const items = await fetchScenarios();
-      setScenarios(items);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load scenarios");
-    } finally {
-      setLoadingScenarios(false);
-    }
-  };
 
   const handleRun = async (file: string) => {
     try {
@@ -46,196 +47,175 @@ export const DatasetReplay: React.FC<DatasetReplayProps> = ({ onAnalysisComplete
     }
   };
 
+  const getScenarioPurpose = (type: string) => {
+    switch (type) {
+      case "attack":
+        return {
+          purpose: "Full 4-Stage Attack Chain Reconstruction",
+          badge: "border-rose-500/30 bg-rose-950/20 text-rose-300",
+        };
+      case "benign":
+        return {
+          purpose: "False-Positive Suppression Control",
+          badge: "border-emerald-500/30 bg-emerald-950/20 text-emerald-300",
+        };
+      case "partial":
+        return {
+          purpose: "Sequence Degradation & Missing Stage Resilience",
+          badge: "border-amber-500/30 bg-amber-950/20 text-amber-300",
+        };
+      default:
+        return {
+          purpose: "Schema Validation & Ingestion Quarantine Check",
+          badge: "border-slate-700 bg-slate-800 text-slate-300",
+        };
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Introduction Banner */}
-      <div className="rounded border border-[#1e2438] bg-[#0d101a] p-5">
-        <h2 className="font-mono text-base font-bold text-slate-100 flex items-center gap-2">
-          <Layers className="h-5 w-5 text-cyan-400" />
-          DATASET REPLAY & CORRELATION BENCHMARK
-        </h2>
-        <p className="mt-1 text-xs text-slate-400 leading-relaxed max-w-3xl font-sans">
-          Replay canonical attack chains or benign employee baselines through the ThreatWeave normalization, atomic signal detection, temporal sequence correlation, and false-positive suppression gates.
+    <div className="space-y-4">
+      {/* Banner */}
+      <section aria-label="Engineering Replay Workspace" className="rounded-sm border border-[#171d2b] bg-[#0c0f17] p-4 text-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#151a26] pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-cyan-400" />
+            <h2 className="font-mono-technical text-sm font-bold tracking-wide text-slate-100">
+              DATASET REPLAY & CORRELATION HARNESS
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 font-mono-technical text-[11px] text-slate-400">
+            <span>DETERMINISTIC EVALUATION ENGINE</span>
+            <span className="text-slate-600">•</span>
+            <span>REPRODUCIBLE TELEMETRY PIPELINE</span>
+          </div>
+        </div>
+        <p className="mt-2.5 text-xs font-mono-technical text-slate-400 leading-relaxed max-w-4xl">
+          Execute canonical telemetry datasets through ThreatWeave ingestion normalization, atomic signal detection, temporal sequence correlation, and false-positive suppression gates.
         </p>
-      </div>
+      </section>
 
       {error && (
-        <div className="rounded border border-rose-500/40 bg-rose-950/30 p-3 text-xs text-rose-300">
-          {error}
+        <div className="rounded-sm border border-rose-500/40 bg-rose-950/20 p-3 font-mono-technical text-xs text-rose-300">
+          EXECUTION ERROR: {error}
         </div>
       )}
 
-      {/* Scenario Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {scenarios.map((sc) => {
-          const isRunning = runningScenario === sc.file;
+      {/* Scenarios Table / Matrix */}
+      <section aria-label="Evaluation Scenarios" className="rounded-sm border border-[#171d2b] bg-[#0c0f17] p-4 text-slate-200">
+        <div className="flex items-center justify-between border-b border-[#151a26] pb-2.5 mb-3 font-mono-technical text-xs">
+          <span className="font-bold text-slate-200">AVAILABLE TELEMETRY SCENARIOS ({scenarios.length})</span>
+          <span className="text-slate-400 text-[11px]">{loadingScenarios ? "LOADING SCENARIOS" : "SELECT A SCENARIO"}</span>
+        </div>
 
-          return (
-            <div
-              key={sc.id}
-              className="rounded border border-[#1e2438] bg-[#101320] p-4 flex flex-col justify-between space-y-4 hover:border-[#2b334d] transition"
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase font-bold border ${
-                      sc.type === "attack"
-                        ? "border-rose-500/40 bg-rose-950/40 text-rose-300"
-                        : sc.type === "benign"
-                        ? "border-emerald-500/40 bg-emerald-950/40 text-emerald-300"
-                        : sc.type === "partial"
-                        ? "border-amber-500/40 bg-amber-950/40 text-amber-300"
-                        : "border-slate-600 bg-slate-800 text-slate-300"
-                    }`}
-                  >
-                    {sc.type} scenario
-                  </span>
-                  <span className="font-mono text-xs text-slate-400">
-                    {sc.records_count} records
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {scenarios.map((sc) => {
+            const isRunning = runningScenario === sc.file;
+            const meta = getScenarioPurpose(sc.type);
+
+            return (
+              <div
+                key={sc.id}
+                className="rounded-sm border border-[#171d2b] bg-[#10141f] p-3.5 flex flex-col justify-between space-y-3 hover:border-[#2b354d] transition"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`rounded-sm px-2 py-0.5 font-mono-technical text-[10px] uppercase font-bold border ${meta.badge}`}
+                    >
+                      {sc.type.toUpperCase()} SCENARIO
+                    </span>
+                    <span className="font-mono-technical text-[11px] text-slate-400">
+                      {sc.records_count} RECORDS
+                    </span>
+                  </div>
+
+                  <h3 className="mt-2 font-mono-technical text-xs font-bold text-slate-100">
+                    {sc.name}
+                  </h3>
+
+                  <div className="mt-2 space-y-1 font-mono-technical text-[11px]">
+                    <div className="text-slate-300">
+                      <span className="text-slate-400">Purpose: </span>
+                      {meta.purpose}
+                    </div>
+                  </div>
                 </div>
 
-                <h3 className="mt-2 text-sm font-bold text-slate-100">
-                  {sc.name}
-                </h3>
-                <p className="mt-1 font-mono text-[11px] text-cyan-300/80">
-                  {sc.file}
-                </p>
-                <p className="mt-2 text-xs text-slate-400 leading-relaxed font-sans">
-                  {sc.description}
-                </p>
-              </div>
+                <div className="pt-2.5 border-t border-[#171d2b] flex items-center justify-between">
+                  <span className="font-mono-technical text-[10px] text-slate-400">
+                    File: {sc.file}
+                  </span>
 
-              <div className="pt-3 border-t border-[#181d2f] flex items-center justify-between">
-                <span className="text-[11px] font-mono text-slate-500">
-                  Deterministic Seed
-                </span>
-                <button
-                  onClick={() => handleRun(sc.file)}
-                  disabled={isRunning}
-                  className="flex items-center gap-1.5 rounded bg-cyan-600 hover:bg-cyan-500 px-3 py-1.5 font-mono text-xs font-semibold text-slate-900 transition disabled:opacity-50"
-                >
-                  <Play className={`h-3.5 w-3.5 fill-current ${isRunning ? "animate-spin" : ""}`} />
-                  <span>{isRunning ? "Executing..." : "Run Pipeline"}</span>
-                </button>
+                  <button
+                    onClick={() => handleRun(sc.file)}
+                    disabled={isRunning}
+                    className="flex items-center gap-1.5 rounded-sm bg-cyan-600 hover:bg-cyan-500 px-3 py-1 font-mono-technical text-xs font-bold text-slate-950 transition disabled:opacity-50"
+                  >
+                    {isRunning ? (
+                      <>
+                        <RefreshCw className="h-3 w-3 animate-spin" />
+                        <span>RUNNING...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3 w-3 fill-current" />
+                        <span>REPLAY DATASET</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </section>
 
-      {/* Execution Results Card */}
+      {/* Execution Results Ledger (Real API Output) */}
       {lastResult && (
-        <div className="rounded border border-[#1e2438] bg-[#0d101a] p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-[#161a29] pb-3">
-            <h3 className="font-mono text-sm font-bold text-slate-100 flex items-center gap-2">
+        <section aria-label="Pipeline Run Execution Ledger" className="rounded-sm border border-[#171d2b] bg-[#0c0f17] p-4 text-slate-200 space-y-3">
+          <div className="flex items-center justify-between border-b border-[#151a26] pb-2.5">
+            <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              ANALYSIS PIPELINE RUN COMPLETE
-            </h3>
-            <span className="font-mono text-xs text-cyan-400">
-              Execution Time: {lastResult.runtime_ms} ms
+              <h3 className="font-mono-technical text-xs font-bold text-slate-100 uppercase tracking-wide">
+                PIPELINE EXECUTION OUTPUT ({lastResult.dataset_id})
+              </h3>
+            </div>
+            <span className="font-mono-technical text-[10px] text-emerald-300 bg-emerald-950/30 px-2 py-0.5 rounded-sm border border-emerald-500/30">
+              STATUS: {lastResult.status.toUpperCase()} ({lastResult.runtime_ms}ms)
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div className="rounded border border-[#1e2438] bg-[#121625] p-3 text-center">
-              <span className="text-[10px] font-mono text-slate-400 block">Total Records</span>
-              <span className="text-xl font-bold font-mono text-slate-100">
-                {lastResult.total_records_processed}
-              </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono-technical text-xs">
+            <div className="rounded-sm border border-[#171d2b] bg-[#10141f] p-2.5">
+              <span className="text-[10px] text-slate-400 block uppercase">Ingested Records</span>
+              <span className="text-slate-100 font-bold mt-0.5 block">{lastResult.total_records_processed}</span>
             </div>
-
-            <div className="rounded border border-[#1e2438] bg-[#121625] p-3 text-center">
-              <span className="text-[10px] font-mono text-slate-400 block">Valid Events</span>
-              <span className="text-xl font-bold font-mono text-emerald-400">
-                {lastResult.valid_events}
-              </span>
+            <div className="rounded-sm border border-[#171d2b] bg-[#10141f] p-2.5">
+              <span className="text-[10px] text-slate-400 block uppercase">Promoted Incidents</span>
+              <span className="text-cyan-300 font-bold mt-0.5 block">{lastResult.incidents_created}</span>
             </div>
-
-            <div className="rounded border border-[#1e2438] bg-[#121625] p-3 text-center">
-              <span className="text-[10px] font-mono text-slate-400 block">Quarantined</span>
-              <span className="text-xl font-bold font-mono text-amber-400">
-                {lastResult.quarantined_records}
-              </span>
+            <div className="rounded-sm border border-[#171d2b] bg-[#10141f] p-2.5">
+              <span className="text-[10px] text-slate-400 block uppercase">Suppressed Clusters</span>
+              <span className="text-amber-300 font-bold mt-0.5 block">{lastResult.suppressed_clusters}</span>
             </div>
-
-            <div className="rounded border border-[#1e2438] bg-[#121625] p-3 text-center">
-              <span className="text-[10px] font-mono text-slate-400 block">Signals Fired</span>
-              <span className="text-xl font-bold font-mono text-purple-400">
-                {lastResult.signals_detected}
-              </span>
-            </div>
-
-            <div className="rounded border border-[#1e2438] bg-[#121625] p-3 text-center">
-              <span className="text-[10px] font-mono text-slate-400 block">Incidents</span>
-              <span className="text-xl font-bold font-mono text-rose-400">
-                {lastResult.incidents_created}
-              </span>
-            </div>
-
-            <div className="rounded border border-[#1e2438] bg-[#121625] p-3 text-center">
-              <span className="text-[10px] font-mono text-slate-400 block">Suppressed</span>
-              <span className="text-xl font-bold font-mono text-blue-400">
-                {lastResult.suppressed_clusters}
-              </span>
+            <div className="rounded-sm border border-[#171d2b] bg-[#10141f] p-2.5">
+              <span className="text-[10px] text-slate-400 block uppercase">Quarantined Records</span>
+              <span className="text-rose-300 font-bold mt-0.5 block">{lastResult.quarantined_records}</span>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Scenario Benchmark & False-Positive Verification Matrix */}
-      <div className="rounded border border-[#1e2438] bg-[#0d101a] p-5 space-y-3">
-        <h3 className="font-mono text-sm font-bold text-slate-100">
-          SCENARIO VERIFICATION BENCHMARK
-        </h3>
-        <p className="text-xs text-slate-400">
-          Evaluator acceptance table demonstrating attack escalation and false positive suppression.
-        </p>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left font-mono text-xs">
-            <thead>
-              <tr className="border-b border-[#1e2438] text-slate-400">
-                <th className="py-2">Scenario</th>
-                <th className="py-2">Expected Behavior</th>
-                <th className="py-2">Risk Index</th>
-                <th className="py-2">Promotion Status</th>
-                <th className="py-2">Audit Verdict</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#181d2f] text-slate-300">
-              <tr>
-                <td className="py-2.5 font-bold text-rose-400">attack_insider_usb</td>
-                <td>4-stage coordinated exfiltration</td>
-                <td>84 / 100 (High)</td>
-                <td><span className="text-rose-400">PROMOTED (inc-001)</span></td>
-                <td><span className="text-emerald-400 font-bold">PASS</span></td>
-              </tr>
-              <tr>
-                <td className="py-2.5 font-bold text-emerald-400">benign_admin</td>
-                <td>Routine sysadmin & backup</td>
-                <td>0 (Suppressed)</td>
-                <td><span className="text-blue-400">SUPPRESSED</span></td>
-                <td><span className="text-emerald-400 font-bold">PASS (Zero False Positives)</span></td>
-              </tr>
-              <tr>
-                <td className="py-2.5 font-bold text-amber-400">attack_partial</td>
-                <td>Missing USB file copy stage</td>
-                <td>Lowered (~70)</td>
-                <td><span className="text-amber-400">DEGRADED CHAIN</span></td>
-                <td><span className="text-emerald-400 font-bold">PASS</span></td>
-              </tr>
-              <tr>
-                <td className="py-2.5 font-bold text-purple-400">malformed_logs</td>
-                <td>Bad syntax, missing IDs, duplicates</td>
-                <td>N/A</td>
-                <td><span className="text-purple-400">6 QUARANTINED</span></td>
-                <td><span className="text-emerald-400 font-bold">PASS (No Crashes)</span></td>
-              </tr>
-            </tbody>
-          </table>
+      {/* Static Benchmark Reference Section Clearly Tagged */}
+      <section aria-label="Benchmark Reference Standard" className="rounded-sm border border-[#171d2b] bg-[#090c13] p-3.5 text-slate-400 font-mono-technical text-[11px] space-y-1.5">
+        <div className="flex items-center justify-between text-slate-300 font-bold text-xs border-b border-[#151a26] pb-1.5">
+          <span>BENCHMARK STANDARD REFERENCE (OFFLINE EVALUATION SUITE)</span>
+          <span className="text-[10px] text-slate-400 uppercase">REFERENCE ONLY • NOT LIVE TELEMETRY</span>
         </div>
-      </div>
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          HNX26PSI03 Baseline Specification: Canonical insider exfiltration must produce $\ge 3$ correlated stages with $Risk \ge 75$. Benign baseline runs must produce 0 promoted incidents with $100\%$ suppression gate compliance.
+        </p>
+      </section>
     </div>
   );
 };

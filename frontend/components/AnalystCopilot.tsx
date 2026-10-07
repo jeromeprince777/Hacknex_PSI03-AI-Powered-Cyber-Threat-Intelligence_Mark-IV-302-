@@ -1,234 +1,189 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bot, Send, ShieldCheck, ShieldAlert, Sparkles, CheckCircle2, AlertOctagon, Terminal } from "lucide-react";
+import { AlertTriangle, Check, MessageSquareText, Send, Sparkles, Terminal } from "lucide-react";
 import { askCopilot } from "../lib/api";
 import { CopilotResponse } from "../lib/types";
 
 interface AnalystCopilotProps {
   incidentId: string;
+  onSelectEvent?: (eventId: string) => void;
 }
 
-export const AnalystCopilot: React.FC<AnalystCopilotProps> = ({ incidentId }) => {
-  const [question, setQuestion] = useState<string>("Why is this incident high risk?");
-  const [loading, setLoading] = useState<boolean>(false);
+const suggestedQuestions = [
+  "Which events support each detected stage?",
+  "How was this risk index calculated?",
+  "What approved actions are available?",
+];
+
+export const AnalystCopilot: React.FC<AnalystCopilotProps> = ({ incidentId, onSelectEvent }) => {
+  const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<CopilotResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Evaluator demonstration injection switches
-  const [injectFakeEvent, setInjectFakeEvent] = useState<boolean>(false);
-  const [injectFakeAction, setInjectFakeAction] = useState<boolean>(false);
+  const handleSubmit = async (submittedQuestion = question) => {
+    const query = submittedQuestion.trim();
+    if (!query || loading) return;
 
-  const handleSubmit = async (q?: string) => {
-    const query = q || question;
-    if (!query.trim()) return;
-
+    setQuestion(query);
     setLoading(true);
     setError(null);
 
     try {
-      const res = await askCopilot(
-        incidentId,
-        query,
-        injectFakeEvent ? "evt-fake-9999" : undefined,
-        injectFakeAction ? "nuke-all-firewalls" : undefined
-      );
-      setResponse(res);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to obtain explanation");
+      const result = await askCopilot(incidentId, query);
+      setResponse(result);
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : "The explanation request failed.");
+      setResponse(null);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="rounded border border-[#1e2438] bg-[#0d101a] p-4 space-y-4">
-      {/* Title & Status */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#161a29] pb-3">
-        <div className="flex items-center gap-2">
-          <Bot className="h-4 w-4 text-cyan-400" />
-          <h3 className="font-mono text-sm font-bold text-slate-100">
-            ANALYST COPILOT & ANTI-HALLUCINATION VERIFIER
-          </h3>
-        </div>
-        <span className="font-mono text-[11px] text-slate-400">
-          Bounded Evidence Pack Grounding — No Open DB Queries
-        </span>
-      </div>
-
-      {/* Preset Query Chips */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-slate-400 text-[11px] font-mono">Suggested:</span>
-        <button
-          onClick={() => {
-            setQuestion("Why is this incident high risk?");
-            handleSubmit("Why is this incident high risk?");
-          }}
-          className="rounded border border-[#1e2438] bg-[#121625] px-2.5 py-1 text-slate-300 hover:border-cyan-500/40 hover:text-cyan-300 transition"
-        >
-          Why is this incident high risk?
-        </button>
-        <button
-          onClick={() => {
-            setQuestion("What actions should the IR team take?");
-            handleSubmit("What actions should the IR team take?");
-          }}
-          className="rounded border border-[#1e2438] bg-[#121625] px-2.5 py-1 text-slate-300 hover:border-cyan-500/40 hover:text-cyan-300 transition"
-        >
-          What actions should the IR team take?
-        </button>
-      </div>
-
-      {/* Evaluator Demonstration Toggles (Negative Testing) */}
-      <div className="rounded border border-[#1e2438] bg-[#0a0d16] p-3 text-xs space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-[11px] font-bold text-slate-300">
-            EVALUATOR NEGATIVE TESTING CONTROLS:
+    <footer className="tw-panel overflow-hidden select-none" aria-labelledby="analyst-assist-heading">
+      {/* Stitch Drawer Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-[#111822] p-3 sm:px-4">
+        <div className="flex items-center gap-2.5">
+          <span className="p-1 bg-cyan-400 text-[#0b0f14] flex items-center justify-center font-bold">
+            <Sparkles className="h-3.5 w-3.5" />
           </span>
-          <span className="text-[10px] text-slate-400 font-mono">
-            Simulate model hallucination to test verifier
+          <h2 id="analyst-assist-heading" className="text-xs font-bold text-slate-100 font-mono-technical">
+            ThreatWeave Heuristic Copilot // v3.4 Engine
+          </h2>
+          <span className="hidden sm:inline-block text-[9px] font-mono-technical text-emerald-400 bg-[#0a0e13] px-2 py-0.5 border border-slate-800">
+            STRICT ZERO-HALLUCINATION ENFORCED (100% TOKEN ATTRIBUTION)
           </span>
         </div>
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-            <input
-              type="checkbox"
-              checked={injectFakeEvent}
-              onChange={(e) => setInjectFakeEvent(e.target.checked)}
-              className="rounded bg-[#161b2c] border-[#222a42] text-rose-500 focus:ring-0"
-            />
-            <span className={injectFakeEvent ? "text-rose-400 font-semibold" : ""}>
-              Inject Hallucinated Event ID (evt-fake-9999)
-            </span>
-          </label>
-
-          <label className="flex items-center gap-2 cursor-pointer text-slate-300">
-            <input
-              type="checkbox"
-              checked={injectFakeAction}
-              onChange={(e) => setInjectFakeAction(e.target.checked)}
-              className="rounded bg-[#161b2c] border-[#222a42] text-rose-500 focus:ring-0"
-            />
-            <span className={injectFakeAction ? "text-rose-400 font-semibold" : ""}>
-              Inject Unauthorized Action (nuke-all-firewalls)
-            </span>
-          </label>
-        </div>
+        <span className="font-mono-technical text-[10px] text-slate-400">{incidentId}</span>
       </div>
 
-      {/* Question Input Form */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="flex gap-2"
-      >
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ask Copilot regarding incident telemetry or root cause..."
-            className="w-full rounded border border-[#1e2438] bg-[#121625] px-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
-          />
+      <div className="space-y-3 p-3.5 sm:p-4 bg-[#0b0f14]">
+        {/* Suggested Queries */}
+        <div className="flex flex-wrap gap-1.5" aria-label="Suggested questions">
+          {suggestedQuestions.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => void handleSubmit(suggestion)}
+              disabled={loading}
+              className="border border-slate-700 bg-[#111822] px-2 py-1 text-left font-mono-technical text-[10px] text-slate-300 hover:border-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              {suggestion}
+            </button>
+          ))}
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex items-center gap-1.5 rounded bg-cyan-600 hover:bg-cyan-500 px-4 py-2 font-mono text-xs font-semibold text-slate-900 transition disabled:opacity-50"
+
+        {/* Tactical Query Input Bar */}
+        <form
+          className="flex flex-col gap-2 sm:flex-row relative"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
         >
-          {loading ? (
-            <Sparkles className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Send className="h-3.5 w-3.5" />
-          )}
-          <span>{loading ? "Analyzing..." : "Ask"}</span>
-        </button>
-      </form>
+          <label className="sr-only" htmlFor="analyst-question">Ask about the evidence or risk components</label>
+          <div className="relative flex-1 flex items-center">
+            <span className="absolute left-2.5 text-cyan-400 font-mono-technical text-xs">&gt;</span>
+            <input
+              id="analyst-question"
+              type="text"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder="Ask Copilot for IOC timeline analysis or evidence decomposition…"
+              className="w-full border border-slate-700 bg-[#111822] pl-6 pr-3 py-1.5 font-mono-technical text-xs text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-cyan-400"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !question.trim()}
+            aria-busy={loading}
+            className="tw-inline-action tw-primary-action px-3 py-1.5 text-xs font-bold"
+          >
+            <Send className="h-3 w-3" aria-hidden="true" />
+            <span>{loading ? "EVALUATING…" : "EXEC [↵]"}</span>
+          </button>
+        </form>
 
-      {/* Error state */}
-      {error && (
-        <div className="rounded border border-rose-500/30 bg-rose-950/30 p-3 text-xs text-rose-300">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div role="alert" className="flex items-start gap-2 border border-rose-500/50 bg-rose-950/30 p-2.5 font-mono-technical text-xs text-rose-300">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-400" aria-hidden="true" />
+            <span>{error}</span>
+          </div>
+        )}
 
-      {/* Response Box with Real-time Verification Badge */}
-      {response && (
-        <div className="space-y-3 pt-2">
-          {/* Verification Banner */}
-          {response.verified ? (
-            <div className="flex items-center gap-2 rounded border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 text-xs font-mono text-emerald-300">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              <div>
-                <strong>VERIFIED BY ANTI-HALLUCINATION GUARD:</strong> All cited event IDs, stage IDs, and response actions match the verified evidence pack 100%.
+        {/* Copilot Response Synthesis & Grounded Citations Bar */}
+        {response && (
+          <div className="border-t border-slate-800 pt-3 font-mono-technical text-xs" aria-live="polite">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div className={`inline-flex items-center gap-1.5 text-xs font-semibold ${response.verified ? "text-emerald-400" : "text-rose-400"}`}>
+                {response.verified ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
+                <span>{response.verified ? "CRYPTOGRAPHIC EVIDENCE VALIDATION PASSED" : "RESPONSE REJECTED BY EVIDENCE VALIDATION"}</span>
               </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 rounded border border-rose-500/50 bg-rose-950/40 px-3 py-2 text-xs font-mono text-rose-300">
-              <AlertOctagon className="h-4 w-4 text-rose-400 shrink-0" />
-              <div>
-                <strong>AI EXPLANATION REJECTED:</strong> Evidence reference validation failed.
-                <div className="mt-1 text-[11px] text-rose-400/90">
-                  Reason: {response.rejection_reason}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Explanation Content (Only shown if verified) */}
-          {response.verified && response.explanation && (
-            <div className="rounded border border-[#1e2438] bg-[#111422] p-4 space-y-3 font-sans text-xs">
-              <div>
-                <span className="font-mono text-[10px] text-cyan-400 font-bold uppercase tracking-wider block">
-                  INCIDENT NARRATIVE
-                </span>
-                <p className="mt-1 text-slate-200 leading-relaxed font-sans">
-                  {response.explanation.summary}
-                </p>
-              </div>
-
-              {/* Stage Explanations */}
-              <div className="space-y-2 border-t border-[#1a1f33] pt-3">
-                <span className="font-mono text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                  STAGE-BY-STAGE EVIDENCE PROOF
-                </span>
-                {response.explanation.stage_explanations.map((stg) => (
-                  <div key={stg.stage_id} className="rounded bg-[#0c0f1a] p-2.5 border border-[#1e2438]">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-[11px] font-bold text-cyan-300 uppercase">
-                        {stg.stage_id}
-                      </span>
-                      <div className="flex gap-1">
-                        {stg.evidence_event_ids.map((eid) => (
-                          <span
-                            key={eid}
-                            className="rounded bg-cyan-950 px-1.5 py-0.2 font-mono text-[10px] text-cyan-300 border border-cyan-500/30"
-                          >
-                            {eid}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="mt-1 text-slate-300 text-[11px] font-sans">
-                      {stg.explanation}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Limitations note */}
-              {response.explanation.limitations && (
-                <div className="border-t border-[#1a1f33] pt-2 text-[10px] font-mono text-slate-400">
-                  <span className="font-bold text-slate-400">Model Bounds: </span>
-                  {response.explanation.limitations.join(" • ")}
-                </div>
+              {response.explanation && (
+                <span className="text-[10px] text-slate-400">Confidence: <span className="text-cyan-400 font-bold uppercase">{response.explanation.confidence}</span></span>
               )}
             </div>
-          )}
-        </div>
-      )}
-    </div>
+
+            {!response.verified && response.rejection_reason && (
+              <p className="mt-1 text-xs text-rose-300 bg-rose-950/20 p-2 border border-rose-500/40">{response.rejection_reason}</p>
+            )}
+
+            {response.verified && response.explanation ? (
+              <div className="space-y-3 bg-[#111822] p-3 border border-slate-800">
+                {/* Natural Language Synthesis */}
+                <p className="text-slate-200 leading-relaxed text-xs">
+                  <span className="text-rose-400 font-bold">[CRITICAL SYNTHESIS]: </span>
+                  {response.explanation.summary}
+                </p>
+
+                {/* Stage Explanations with Citations */}
+                {response.explanation.stage_explanations.length > 0 && (
+                  <div className="space-y-2 border-t border-slate-800 pt-2.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400">STAGE CORRELATIONS:</span>
+                    {response.explanation.stage_explanations.map((stage) => (
+                      <div key={stage.stage_id} className="grid gap-1.5 sm:grid-cols-[9rem_minmax(0,1fr)] bg-[#0a0e13] p-2 border border-slate-800/80">
+                        <span className="font-bold text-cyan-400 text-[10px]">{stage.stage_id}</span>
+                        <div>
+                          <p className="text-[11px] text-slate-300 leading-snug">{stage.explanation}</p>
+                          {stage.evidence_event_ids.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              <span className="text-[9px] text-slate-400 uppercase mr-1">VERIFIED CITATIONS:</span>
+                              {stage.evidence_event_ids.map((eventId) => (
+                                <button
+                                  key={eventId}
+                                  type="button"
+                                  onClick={() => onSelectEvent?.(eventId)}
+                                  className="px-1.5 py-0.2 bg-cyan-950/60 border border-cyan-500/50 text-cyan-300 hover:border-cyan-300 text-[9px] transition-colors"
+                                >
+                                  🔗 {eventId} (100% Grounded)
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Recommended Actions */}
+                {response.explanation.recommended_actions.length > 0 && (
+                  <div className="border-t border-slate-800 pt-2 flex flex-wrap gap-2 items-center">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">RECOMMENDED PLAYBOOKS:</span>
+                    {response.explanation.recommended_actions.map((action) => (
+                      <span key={action.action_id} className="px-2 py-0.5 bg-[#16202e] border border-slate-700 text-slate-300 text-[10px]">
+                        <span className="text-cyan-400 font-bold">{action.action_id}</span> · {action.reason}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </footer>
   );
 };

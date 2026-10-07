@@ -84,7 +84,7 @@ class TemporalSequenceCorrelator:
             entity_key = ev.user_id or ev.device_id or ev.session_id or "unknown_entity"
             if entity_key not in clusters:
                 clusters[entity_key] = CorrelatedCluster(
-                    cluster_id=f"cluster-{uuid.uuid4().hex[:6]}",
+                    cluster_id=f"cluster-{entity_key}",
                     primary_entity=entity_key,
                 )
 
@@ -267,7 +267,7 @@ class TemporalSequenceCorrelator:
 
         if missing_requirements:
             suppression = SuppressionRecord(
-                suppression_id=f"sup-{uuid.uuid4().hex[:6]}",
+                suppression_id=f"sup-{cluster.cluster_id}",
                 target_id=cluster.cluster_id,
                 reason_code="INSUFFICIENT_CHAIN_EVIDENCE",
                 missing_requirements=missing_requirements,

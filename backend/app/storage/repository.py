@@ -72,7 +72,8 @@ class StorageRepository:
                     stage TEXT NOT NULL,
                     score REAL NOT NULL,
                     reason_code TEXT NOT NULL,
-                    parameters_json TEXT
+                    parameters_json TEXT,
+                    UNIQUE(event_id, reason_code)
                 )
             """)
 
@@ -200,6 +201,10 @@ class StorageRepository:
                 incident.rule_version,
                 now_iso,
             ))
+
+            # Clean prior stages and stage_evidence for this incident to maintain idempotency
+            cursor.execute("DELETE FROM stage_evidence WHERE incident_id = ?", (incident.incident_id,))
+            cursor.execute("DELETE FROM stages WHERE incident_id = ?", (incident.incident_id,))
 
             for stg in stages:
                 cursor.execute("""
